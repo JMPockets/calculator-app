@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator App</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .btn-custom {
+            background-color: #007BFF;
+            color: white;
+        }
+        .btn-custom:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center mb-4">Calculator App</h2>
+        <form>
+            <div class="form-group">
+                <label for="itemName">Item Name</label>
+                <select class="form-control" id="itemName" onchange="updateSqFtValues()">
+                    <!-- Options will be populated by JavaScript -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="requested">Requested</label>
+                <input type="number" class="form-control" id="requested" placeholder="Enter requested quantity">
+            </div>
+            <div class="form-group">
+                <label for="sqftPerBox">SqFt per Box</label>
+                <input type="number" class="form-control" id="sqftPerBox" placeholder="Enter SqFt per box" readonly>
+            </div>
+            <div class="form-group">
+                <label for="sqftPerPiece">SqFt per Piece</label>
+                <input type="number" class="form-control" id="sqftPerPiece" placeholder="Enter SqFt per piece" readonly>
+            </div>
+            <button type="button" class="btn btn-custom btn-block" onclick="calculate()">Calculate</button>
+        </form>
+        <div class="result alert alert-info mt-3" id="result" style="display: none;"></div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        const items = [
+            { name: "Cameron(Merbau)", sqftPerPiece: 2.33, sqftPerBox: 34.98 },
+            { name: "Expo And Market Square", sqftPerPiece: 1.99, sqftPerBox: 53.93 },
+            { name: "Foundation 51.33", sqftPerPiece: 2.33, sqftPerBox: 51.33 },
+            { name: "Arrington Gotham Grey", sqftPerPiece: 1.5, sqftPerBox: 36 },
+            { name: "Rexford", sqftPerPiece: 2.66, sqftPerBox: 45.33 },
+            { name: "Downtown (bourbon 8 mil)", sqftPerPiece: 1.98, sqftPerBox: 53.63 },
+            { name: "Freelay 4.7", sqftPerPiece: 3, sqftPerBox: 36 },
+            { name: "Looselay Longboard", sqftPerPiece: 4, sqftPerBox: 32.29 },
+            { name: "Access White oak", sqftPerPiece: 2.07, sqftPerBox: 41.47 },
+            { name: "Katanga 4/12", sqftPerPiece: 2.33, sqftPerBox: 28.03 },
+            { name: "Katanga 2mm glue down", sqftPerPiece: 2.33, sqftPerBox: 51.39 },
+            { name: " Life Style (Caico, Playa, Aruba)", sqftPerPiece: 1.96, sqftPerBox: 23.64 },
+            { name: "Neutral Oak Looselay", sqftPerPiece: 4.03, sqftPerBox: 32.29 },
+            { name: "Knight", sqftPerPiece: 1.5, sqftPerBox: 36 },
+            { name: "Ozark 2 (Sugar Maple, Cumberland, Key Largo", sqftPerPiece: 2.32, sqftPerBox: 51.24 },
+            { name: "Fontana (Ristretto, tobacco)", sqftPerPiece: 1.98, sqftPerBox: 51.99 },
+            { name: "Lookout Mount (Signal & Lookout point)", sqftPerPiece: 1.97, sqftPerBox: 27.58 },
+            { name: "Carolina Coastal", sqftPerPiece: 2.36, sqftPerBox: 23.64 },
+            { name: "Suspension Chassis", sqftPerPiece: 2.33, sqftPerBox: 32.72 },
+            { name: "Natural Personality Heart Oak", sqftPerPiece: 1.5, sqftPerBox: 54 },
+            { name: "Innsbruck Lodge", sqftPerPiece: 1.5, sqftPerBox: 27 },
+            { name: "Sherburn", sqftPerPiece: 1.88, sqftPerBox: 52.68 },
+            { name: "Parmanece Cream", sqftPerPiece: 2.25, sqftPerBox: 36 },
+            { name: "Resolve", sqftPerPiece: 2.54, sqftPerBox: 40.62 },
+            { name: "K-Trade pvp neutral", sqftPerPiece: 2.33, sqftPerBox: 51.34 },
+            { name: "Gluedown 2/8 Mil", sqftPerPiece: 3, sqftPerBox: 60 },
+            { name: "Modernality Skyline", sqftPerPiece: 1.98, sqftPerBox: 41.72 },
+            { name: "Tenacious Grey Ice", sqftPerPiece: 2.33, sqftPerBox: 51.39 },
+            { name: "derby evening shadows", sqftPerPiece: 1.5, sqftPerBox: 27 },
+            { name: "Runner Up Copano Oak", sqftPerPiece: 2.4, sqftPerBox: 28.84 },
+            { name: "Oyster Tile", sqftPerPiece: 1.97, sqftPerBox: 15.83 },
+            { name: "Downtown (Bourbon 12 mil)", sqftPerPiece: 1.98, sqftPerBox: 41.72 },
+            { name: "Looselay (Stamford, Linosa, Hartford)", sqftPerPiece: 2.82, sqftPerBox: 33.9 },
+            { name: "Katanga 5/20 (Bison)", sqftPerPiece: 2.33, sqftPerBox: 23.36 },
+            { name: "Town and Country", sqftPerPiece: 1.49, sqftPerBox: 35.94 },
+            { name: "Broadstreet Cognac Oak", sqftPerPiece: 2.33, sqftPerBox: 51.39 },
+            { name: "Merbau Vangogh", sqftPerPiece: 2.33, sqftPerBox: 34.98 },
+            { name: "native origins", sqftPerPiece: 1.99, sqftPerBox: 35.95 },
+            { name: "Terrain 12 Mil (nest)", sqftPerPiece: 1.98, sqftPerBox: 41.72 },
+            { name: "Kenton Lodge", sqftPerPiece: 2.4, sqftPerBox: 28.83 },
+            { name: "GRANDE (Denali)", sqftPerPiece: 2.33, sqftPerBox: 32.7 },
+            { name: "Coretec Pro Plus", sqftPerPiece: 2.4, sqftPerBox: 28.84 },
+            { name: "Living Local", sqftPerPiece: 2, sqftPerBox: 36 },
+            { name: "Firm FIt", sqftPerPiece: 1.88, sqftPerBox: 33.84 },
+            { name: "Homegrain", sqftPerPiece: 1.93, sqftPerBox: 52.3 },
+            { name: "Marathon", sqftPerPiece: 2.11, sqftPerBox: 42.36 },
+            { name: "VCT (Tarkett, Imperial Textures)", sqftPerPiece: 1, sqftPerBox: 45 },
+            { name: "surpass muse", sqftPerPiece: 1.99, sqftPerBox: 53.93 },
+            { name: "Aloft ", sqftPerPiece: 2, sqftPerBox: 36 },
+            { name: "DruidStone", sqftPerPiece: 2.36, sqftPerBox: 23.64 },
+            { name: "Mainstreet ", sqftPerPiece: 2.33, sqftPerBox: 51.39 },
+            { name: "Lakeshore", sqftPerPiece: 2, sqftPerBox: 36 },
+            { name: "Marathon", sqftPerPiece: 2.11, sqftPerBox: 42.36 },
+            { name: "Soundtec", sqftPerPiece: 2.39, sqftPerBox: 23.9 },
+            { name: "marscarpone", sqftPerPiece: 2.41, sqftPerBox: 58 }
+        ];
+
+        // Populate the dropdown with item names
+        const itemNameSelect = document.getElementById('itemName');
+        items.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.name;
+            option.textContent = item.name;
+            itemNameSelect.appendChild(option);
+        });
+
+        function updateSqFtValues() {
+            const selectedItemName = document.getElementById('itemName').value;
+            const selectedItem = items.find(item => item.name === selectedItemName);
+
+            if (selectedItem) {
+                document.getElementById('sqftPerBox').value = selectedItem.sqftPerBox;
+                document.getElementById('sqftPerPiece').value = selectedItem.sqftPerPiece;
+            }
+        }
+
+        function calculate() {
+            const requested = parseFloat(document.getElementById('requested').value);
+            const sqftPerBox = parseFloat(document.getElementById('sqftPerBox').value);
+            const sqftPerPiece = parseFloat(document.getElementById('sqftPerPiece').value);
+
+            if (isNaN(requested) || isNaN(sqftPerBox) || isNaN(sqftPerPiece)) {
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('result').className = 'result alert alert-danger';
+                document.getElementById('result').innerText = 'Please enter valid numbers';
+                return;
+            }
+
+            const boxes = Math.floor(requested / sqftPerBox);
+            const pieces = Math.ceil((requested % sqftPerBox) / sqftPerPiece);
+
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('result').className = 'result alert alert-info';
+            document.getElementById('result').innerText = `Boxes: ${boxes}, Pieces: ${pieces}`;
+        }
+    </script>
+</body>
+</html>

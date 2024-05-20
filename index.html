@@ -154,9 +154,23 @@
                 return;
             }
 
-            const boxes = Math.floor(requested / sqftPerBox);
-            const pieces = Math.ceil((requested % sqftPerBox) / sqftPerPiece);
-            const actualSqFt = (boxes * sqftPerBox) + (pieces * sqftPerPiece);
+            const maxBoxes = Math.floor(requested / sqftPerBox);
+            let boxes = 0;
+            let pieces = 0;
+            let actualSqFt = 0;
+
+            for (let b = maxBoxes; b >= 0; b--) {
+                const remainingSqFt = requested - (b * sqftPerBox);
+                const p = Math.floor(remainingSqFt / sqftPerPiece);
+                const totalSqFt = (b * sqftPerBox) + (p * sqftPerPiece);
+
+                if (totalSqFt <= requested) {
+                    boxes = b;
+                    pieces = p;
+                    actualSqFt = totalSqFt;
+                    break;
+                }
+            }
 
             document.getElementById('result').style.display = 'block';
             document.getElementById('result').className = 'result alert alert-info';

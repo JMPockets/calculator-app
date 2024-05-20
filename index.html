@@ -55,6 +55,7 @@
             <button type="button" class="btn btn-custom btn-block" onclick="calculate()">Calculate</button>
         </form>
         <div class="result alert alert-info mt-3" id="result" style="display: none;"></div>
+        <div class="real-math alert alert-secondary mt-3" id="realMath" style="display: none;"></div>
     </div>
 
     <!-- Bootstrap JS and dependencies -->
@@ -149,15 +150,20 @@
                 document.getElementById('result').style.display = 'block';
                 document.getElementById('result').className = 'result alert alert-danger';
                 document.getElementById('result').innerText = 'Please enter valid numbers';
+                document.getElementById('realMath').style.display = 'none';
                 return;
             }
 
             const boxes = Math.floor(requested / sqftPerBox);
             const pieces = Math.ceil((requested % sqftPerBox) / sqftPerPiece);
+            const actualSqFt = (boxes * sqftPerBox) + (pieces * sqftPerPiece);
 
             document.getElementById('result').style.display = 'block';
             document.getElementById('result').className = 'result alert alert-info';
             document.getElementById('result').innerText = `Boxes: ${boxes}, Pieces: ${pieces}`;
+            document.getElementById('realMath').style.display = 'block';
+            document.getElementById('realMath').className = 'real-math alert alert-secondary';
+            document.getElementById('realMath').innerText = `Actual Square Footage: ${actualSqFt.toFixed(2)}`;
         }
     </script>
 </body>

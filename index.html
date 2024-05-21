@@ -6,6 +6,8 @@
     <title>Calculator App</title>
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         body {
             background-color: #f8f9fa;
@@ -127,6 +129,8 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
         let items = [
@@ -181,21 +185,17 @@
         ];
 
         function populateDropdowns() {
-            const itemNameSelect = document.getElementById('itemName');
-            const editItemNameSelect = document.getElementById('editItemName');
-            itemNameSelect.innerHTML = '';
-            editItemNameSelect.innerHTML = '';
+            const itemNameSelect = $('#itemName');
+            const editItemNameSelect = $('#editItemName');
+            itemNameSelect.empty();
+            editItemNameSelect.empty();
             items.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item.name;
-                option.textContent = item.name;
-                itemNameSelect.appendChild(option);
-
-                const editOption = document.createElement('option');
-                editOption.value = item.name;
-                editOption.textContent = item.name;
-                editItemNameSelect.appendChild(editOption);
+                const option = `<option value="${item.name}">${item.name}</option>`;
+                itemNameSelect.append(option);
+                editItemNameSelect.append(option);
             });
+            itemNameSelect.select2();
+            editItemNameSelect.select2();
         }
 
         function updateSqFtValues() {
@@ -313,3 +313,4 @@
     </script>
 </body>
 </html>
+     

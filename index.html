@@ -40,8 +40,11 @@
         .btn-custom:hover {
             background-color: darkred;
         }
-        .result {
+        .result, .real-math {
             margin-top: 20px;
+        }
+        .fixed-width-select {
+            width: 400px; /* Set the fixed width you desire */
         }
     </style>
 </head>
@@ -105,7 +108,7 @@
             <div class="tab-pane" id="edit">
                 <div class="form-group">
                     <label for="editItemName">Select Item</label>
-                    <select class="form-control" id="editItemName" onchange="populateEditForm()">
+                    <select class="form-control fixed-width-select" id="editItemName" onchange="populateEditForm()">
                         <!-- Options will be populated by JavaScript -->
                     </select>
                 </div>
@@ -153,8 +156,7 @@
             { name: "K-Trade pvp neutral", sqftPerPiece: 2.33, sqftPerBox: 51.34 },
             { name: "Katanga 2mm glue down", sqftPerPiece: 2.33, sqftPerBox: 51.39 },
             { name: "Katanga 4/12", sqftPerPiece: 2.33, sqftPerBox: 28.03 },
-            { name: "Katanga 5/20 (Bison)", sqftPerPiece: 2.33, sqftPerBox: 23.36 },
-            { name: "Kenton Lodge", sqftPerPiece: 2.4, sqftPerBox: 28.83 },
+            { name: "Katanga 5/20", sqftPerPiece: 2.4, sqftPerBox: 28.83 },
             { name: "Lakeshore", sqftPerPiece: 2, sqftPerBox: 36 },
             { name: "Life Style (Caico, Playa, Aruba)", sqftPerPiece: 1.96, sqftPerBox: 23.64 },
             { name: "Limitless", sqftPerPiece: 2.33, sqftPerBox: 34.98 },
@@ -185,6 +187,7 @@
         ];
 
         function populateDropdowns() {
+            items.sort((a, b) => a.name.localeCompare(b.name));
             const itemNameSelect = $('#itemName');
             const editItemNameSelect = $('#editItemName');
             itemNameSelect.empty();
@@ -313,4 +316,3 @@
     </script>
 </body>
 </html>
-     

@@ -4,6 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculator App</title>
+    <!-- Add your existing styles and scripts here -->
+</head>
+<body>
+    <!-- Existing content of your index.html -->
+
+    <!-- Add the PDF upload form -->
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="pdfFile" accept="application/pdf" required>
+        <button type="submit">Upload</button>
+    </form>
+    <div id="resultContainer">
+        <!-- Calculated results will be displayed here -->
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('pdfFile');
+            if (fileInput.files.length === 0) {
+                alert('Please select a PDF file to upload');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('pdf', fileInput.files[0]);
+
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            displayResults(result);
+        });
+
+        function displayResults(result) {
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = '<h3>Calculation Results</h3>';
+            for (const [itemName, calculation] of Object.entries(result)) {
+                const itemResult = document.createElement('p');
+                itemResult.innerText = `${itemName}: Boxes: ${calculation.boxes}, Pieces: ${calculation.pieces}, Actual SqFt: ${calculation.actualSqFt}`;
+                resultContainer.appendChild(itemResult);
+            }
+        }
+    </script>
+
+    <!-- Add your existing scripts here -->
+</body>
+</html>
+
+<!-- Test Feature Above, uploading function? -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator App</title>
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Select2 CSS -->

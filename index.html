@@ -11,42 +11,31 @@
 
     <!-- Add the PDF upload form -->
     <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" id="pdfFile" accept="application/pdf" required>
-        <button type="submit">Upload</button>
-    </form>
-    <div id="resultContainer">
-        <!-- Calculated results will be displayed here -->
-    </div>
+    <input type="file" id="pdfFile" accept="application/pdf" required>
+    <button type="submit">Upload</button>
+</form>
 
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const fileInput = document.getElementById('pdfFile');
-            if (fileInput.files.length === 0) {
-                alert('Please select a PDF file to upload');
-                return;
-            }
-            const formData = new FormData();
-            formData.append('pdf', fileInput.files[0]);
+<script>
+document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById('pdfFile');
+    if (fileInput.files.length === 0) {
+        alert('Please select a PDF file to upload');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('pdf', fileInput.files[0]);
 
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
-            displayResults(result);
-        });
+    const response = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+    });
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+});
+</script>
 
-        function displayResults(result) {
-            const resultContainer = document.getElementById('resultContainer');
-            resultContainer.innerHTML = '<h3>Calculation Results</h3>';
-            for (const [itemName, calculation] of Object.entries(result)) {
-                const itemResult = document.createElement('p');
-                itemResult.innerText = `${itemName}: Boxes: ${calculation.boxes}, Pieces: ${calculation.pieces}, Actual SqFt: ${calculation.actualSqFt}`;
-                resultContainer.appendChild(itemResult);
-            }
-        }
-    </script>
 
     <!-- Add your existing scripts here -->
 </body>

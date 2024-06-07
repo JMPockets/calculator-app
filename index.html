@@ -8,6 +8,8 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <style>
         body {
             background-color: #f8f9fa;
@@ -155,41 +157,23 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, get, set, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCZBYPUvrmzPiAtm7RiQ9304s284Fx9Xnw",
-            authDomain: "cut-calculator-aeb02.firebaseapp.com",
-            databaseURL: "https://cut-calculator-aeb02-default-rtdb.firebaseio.com",
-            projectId: "cut-calculator-aeb02",
-            storageBucket: "cut-calculator-aeb02.appspot.com",
-            messagingSenderId: "637507936787",
-            appId: "1:637507936787:web:7aa7995e6e4827e66a55e6",
-            measurementId: "G-2FGQE4TWRL"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://emzauakddjlllajpqywe.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtemF1YWtkZGpsbGxhanBxeXdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTc3OTkxMjIsImV4cCI6MjAzMzM3NTEyMn0._EMISkx3LiW9VKRJ7kQjepZTCkDA2m-XKZF_ClpX9Ys';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let items = [];
-        let history = [];
+        let history = JSON.parse(localStorage.getItem('history')) || [];
 
-        function fetchItems() {
-            const dbRef = ref(db);
-            get(child(dbRef, 'items')).then((snapshot) => {
-                if (snapshot.exists()) {
-                    items = snapshot.val() || [];
-                    populateDropdowns();
-                }
-            }).catch(error => {
-                console.error("Error fetching items: ", error);
-            });
+        async function fetchItems() {
+            const { data, error } = await supabase.from('items').select();
+            if (error) {
+                console.error('Error fetching items:', error);
+                return;
+            }
+            items = data;
+            populateDropdowns();
         }
 
         function populateDropdowns() {
@@ -198,7 +182,7 @@
             itemNameSelect.empty();
             editItemNameSelect.empty();
             items.forEach(item => {
-                const option = `<option value="${item.name}">${item.name}</option>`;
+                const option = `<option value="${item.id}">${item.name}</option>`;
                 itemNameSelect.append(option);
                 editItemNameSelect.append(option);
             });
@@ -207,8 +191,8 @@
         }
 
         function updateSqFtValues() {
-            const selectedItemName = document.getElementById('itemName').value;
-            const selectedItem = items.find(item => item.name === selectedItemName);
+            const selectedItemId = document.getElementById('itemName').value;
+            const selectedItem = items.find(item => item.id === selectedItemId);
 
             if (selectedItem) {
                 document.getElementById('sqftPerBox').value = selectedItem.sqftPerBox;
@@ -256,7 +240,7 @@
 
             addToHistory({
                 type: 'Calculation',
-                itemName: document.getElementById('itemName').value,
+                itemName: items.find(item => item.id === selectedItemId).name,
                 requested: requested,
                 boxes: boxes,
                 pieces: pieces,
@@ -269,6 +253,7 @@
             if (history.length > 10) {
                 history.pop();
             }
+            localStorage.setItem('history', JSON.stringify(history));
             updateHistory();
         }
 
@@ -285,7 +270,7 @@
             });
         }
 
-        function addItem(event) {
+        async function addItem(event) {
             event.preventDefault();
             const newItemName = document.getElementById('newItemName').value;
             const newSqFtPerBox = parseFloat(document.getElementById('newSqFtPerBox').value);
@@ -296,36 +281,34 @@
                 return;
             }
 
-            const newItem = {
-                name: newItemName,
+            const { data, error } = await supabase.from('items').insert([
+                { name: newItemName, sqftPerBox: newSqFtPerBox, sqftPerPiece: newSqFtPerPiece }
+            ]);
+
+            if (error) {
+                console.error('Error adding item:', error);
+                alert('Error adding item');
+                return;
+            }
+
+            items.push(data[0]);
+            addToHistory({
+                type: 'Add',
+                itemName: newItemName,
                 sqftPerBox: newSqFtPerBox,
                 sqftPerPiece: newSqFtPerPiece
-            };
+            });
 
-            items.push(newItem);
-            set(ref(db, 'items'), items)
-                .then(() => {
-                    addToHistory({
-                        type: 'Add',
-                        itemName: newItemName,
-                        sqftPerBox: newSqFtPerBox,
-                        sqftPerPiece: newSqFtPerPiece
-                    });
-                    populateDropdowns();
-                    alert('Item added successfully!');
-                    document.getElementById('newItemName').value = '';
-                    document.getElementById('newSqFtPerBox').value = '';
-                    document.getElementById('newSqFtPerPiece').value = '';
-                })
-                .catch(error => {
-                    console.error("Error adding item: ", error);
-                    alert("Error adding item: " + error.message);
-                });
+            populateDropdowns();
+            alert('Item added successfully!');
+            document.getElementById('newItemName').value = '';
+            document.getElementById('newSqFtPerBox').value = '';
+            document.getElementById('newSqFtPerPiece').value = '';
         }
 
-        function populateEditForm() {
-            const selectedItemName = document.getElementById('editItemName').value;
-            const selectedItem = items.find(item => item.name === selectedItemName);
+        async function populateEditForm() {
+            const selectedItemId = document.getElementById('editItemName').value;
+            const selectedItem = items.find(item => item.id === selectedItemId);
 
             if (selectedItem) {
                 document.getElementById('editSqFtPerBox').value = selectedItem.sqftPerBox;
@@ -333,66 +316,70 @@
             }
         }
 
-        function editItem(event) {
+        async function editItem(event) {
             event.preventDefault();
-            const selectedItemName = document.getElementById('editItemName').value;
+            const selectedItemId = document.getElementById('editItemName').value;
             const editSqFtPerBox = parseFloat(document.getElementById('editSqFtPerBox').value);
             const editSqFtPerPiece = parseFloat(document.getElementById('editSqFtPerPiece').value);
 
-            if (!selectedItemName || isNaN(editSqFtPerBox) || isNaN(editSqFtPerPiece)) {
+            if (!selectedItemId || isNaN(editSqFtPerBox) || isNaN(editSqFtPerPiece)) {
                 alert('Please enter valid details.');
                 return;
             }
 
-            const selectedItem = items.find(item => item.name === selectedItemName);
-            if (selectedItem) {
-                selectedItem.sqftPerBox = editSqFtPerBox;
-                selectedItem.sqftPerPiece = editSqFtPerPiece;
-                set(ref(db, 'items'), items)
-                    .then(() => {
-                        addToHistory({
-                            type: 'Edit',
-                            itemName: selectedItemName,
-                            sqftPerBox: editSqFtPerBox,
-                            sqftPerPiece: editSqFtPerPiece
-                        });
-                        populateDropdowns();
-                        alert('Item edited successfully!');
-                    })
-                    .catch(error => {
-                        console.error("Error editing item: ", error);
-                        alert("Error editing item: " + error.message);
-                    });
+            const { data, error } = await supabase.from('items').update({
+                sqftPerBox: editSqFtPerBox,
+                sqftPerPiece: editSqFtPerPiece
+            }).eq('id', selectedItemId);
+
+            if (error) {
+                console.error('Error editing item:', error);
+                alert('Error editing item');
+                return;
             }
+
+            const index = items.findIndex(item => item.id === selectedItemId);
+            items[index] = data[0];
+
+            addToHistory({
+                type: 'Edit',
+                itemName: data[0].name,
+                sqftPerBox: editSqFtPerBox,
+                sqftPerPiece: editSqFtPerPiece
+            });
+
+            populateDropdowns();
+            alert('Item edited successfully!');
         }
 
-        function deleteItem() {
-            const selectedItemName = document.getElementById('editItemName').value;
-            const selectedItem = items.find(item => item.name === selectedItemName);
+        async function deleteItem() {
+            const selectedItemId = document.getElementById('editItemName').value;
+            const selectedItem = items.find(item => item.id === selectedItemId);
 
             if (selectedItem) {
+                const { error } = await supabase.from('items').delete().eq('id', selectedItemId);
+                if (error) {
+                    console.error('Error deleting item:', error);
+                    alert('Error deleting item');
+                    return;
+                }
+
+                items = items.filter(item => item.id !== selectedItemId);
                 addToHistory({
                     type: 'Delete',
-                    itemName: selectedItemName,
+                    itemName: selectedItem.name,
                     sqftPerBox: selectedItem.sqftPerBox,
                     sqftPerPiece: selectedItem.sqftPerPiece
                 });
 
-                items = items.filter(item => item.name !== selectedItemName);
-                set(ref(db, 'items'), items)
-                    .then(() => {
-                        populateDropdowns();
-                        alert('Item deleted successfully!');
-                    })
-                    .catch(error => {
-                        console.error("Error deleting item: ", error);
-                        alert("Error deleting item: " + error.message);
-                    });
+                populateDropdowns();
+                alert('Item deleted successfully!');
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchItems();
+            updateHistory();
         });
     </script>
 </body>

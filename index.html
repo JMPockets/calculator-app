@@ -172,6 +172,7 @@
                 console.error('Error fetching items:', error);
                 return;
             }
+            console.log('Fetched items:', data);
             items = data;
             populateDropdowns();
         }
@@ -193,6 +194,7 @@
         function updateSqFtValues() {
             const selectedItemId = document.getElementById('itemName').value;
             const selectedItem = items.find(item => item.id === selectedItemId);
+            console.log('Selected item:', selectedItem);
 
             if (selectedItem) {
                 document.getElementById('sqftPerBox').value = selectedItem.sqftPerBox;
@@ -272,6 +274,7 @@
 
         async function addItem(event) {
             event.preventDefault();
+            console.log('Adding item...');
             const newItemName = document.getElementById('newItemName').value;
             const newSqFtPerBox = parseFloat(document.getElementById('newSqFtPerBox').value);
             const newSqFtPerPiece = parseFloat(document.getElementById('newSqFtPerPiece').value);
@@ -280,6 +283,8 @@
                 alert('Please enter valid details.');
                 return;
             }
+
+            console.log('Item details:', newItemName, newSqFtPerBox, newSqFtPerPiece);
 
             const { data, error } = await supabase.from('items').insert([
                 { name: newItemName, sqftPerBox: newSqFtPerBox, sqftPerPiece: newSqFtPerPiece }
@@ -291,6 +296,7 @@
                 return;
             }
 
+            console.log('Added item:', data);
             items.push(data[0]);
             addToHistory({
                 type: 'Add',
@@ -309,6 +315,7 @@
         async function populateEditForm() {
             const selectedItemId = document.getElementById('editItemName').value;
             const selectedItem = items.find(item => item.id === selectedItemId);
+            console.log('Populating edit form for item:', selectedItem);
 
             if (selectedItem) {
                 document.getElementById('editSqFtPerBox').value = selectedItem.sqftPerBox;
@@ -318,6 +325,7 @@
 
         async function editItem(event) {
             event.preventDefault();
+            console.log('Editing item...');
             const selectedItemId = document.getElementById('editItemName').value;
             const editSqFtPerBox = parseFloat(document.getElementById('editSqFtPerBox').value);
             const editSqFtPerPiece = parseFloat(document.getElementById('editSqFtPerPiece').value);
@@ -326,6 +334,8 @@
                 alert('Please enter valid details.');
                 return;
             }
+
+            console.log('Item details:', selectedItemId, editSqFtPerBox, editSqFtPerPiece);
 
             const { data, error } = await supabase.from('items').update({
                 sqftPerBox: editSqFtPerBox,
@@ -338,6 +348,7 @@
                 return;
             }
 
+            console.log('Edited item:', data);
             const index = items.findIndex(item => item.id === selectedItemId);
             items[index] = data[0];
 
@@ -353,6 +364,7 @@
         }
 
         async function deleteItem() {
+            console.log('Deleting item...');
             const selectedItemId = document.getElementById('editItemName').value;
             const selectedItem = items.find(item => item.id === selectedItemId);
 
@@ -364,6 +376,7 @@
                     return;
                 }
 
+                console.log('Deleted item:', selectedItemId);
                 items = items.filter(item => item.id !== selectedItemId);
                 addToHistory({
                     type: 'Delete',

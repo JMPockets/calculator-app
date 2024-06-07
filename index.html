@@ -164,6 +164,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyCZBYPUvrmzPiAtm7RiQ9304s284Fx9Xnw",
             authDomain: "cut-calculator-aeb02.firebaseapp.com",
+            databaseURL: "https://cut-calculator-aeb02-default-rtdb.firebaseio.com/",
             projectId: "cut-calculator-aeb02",
             storageBucket: "cut-calculator-aeb02.appspot.com",
             messagingSenderId: "637507936787",
@@ -184,6 +185,8 @@
                     items = snapshot.val() || [];
                     populateDropdowns();
                 }
+            }).catch(error => {
+                console.error("Error fetching items: ", error);
             });
         }
 
@@ -298,20 +301,23 @@
             };
 
             items.push(newItem);
-            db.ref('items').set(items);
-
-            addToHistory({
-                type: 'Add',
-                itemName: newItemName,
-                sqftPerBox: newSqFtPerBox,
-                sqftPerPiece: newSqFtPerPiece
-            });
-
-            populateDropdowns();
-            alert('Item added successfully!');
-            document.getElementById('newItemName').value = '';
-            document.getElementById('newSqFtPerBox').value = '';
-            document.getElementById('newSqFtPerPiece').value = '';
+            db.ref('items').set(items)
+                .then(() => {
+                    addToHistory({
+                        type: 'Add',
+                        itemName: newItemName,
+                        sqftPerBox: newSqFtPerBox,
+                        sqftPerPiece: newSqFtPerPiece
+                    });
+                    populateDropdowns();
+                    alert('Item added successfully!');
+                    document.getElementById('newItemName').value = '';
+                    document.getElementById('newSqFtPerBox').value = '';
+                    document.getElementById('newSqFtPerPiece').value = '';
+                })
+                .catch(error => {
+                    console.error("Error adding item: ", error);
+                });
         }
 
         function populateEditForm() {
@@ -339,18 +345,21 @@
             if (selectedItem) {
                 selectedItem.sqftPerBox = editSqFtPerBox;
                 selectedItem.sqftPerPiece = editSqFtPerPiece;
-                db.ref('items').set(items);
+                db.ref('items').set(items)
+                    .then(() => {
+                        addToHistory({
+                            type: 'Edit',
+                            itemName: selectedItemName,
+                            sqftPerBox: editSqFtPerBox,
+                            sqftPerPiece: editSqFtPerPiece
+                        });
+                        populateDropdowns();
+                        alert('Item edited successfully!');
+                    })
+                    .catch(error => {
+                        console.error("Error editing item: ", error);
+                    });
             }
-
-            addToHistory({
-                type: 'Edit',
-                itemName: selectedItemName,
-                sqftPerBox: editSqFtPerBox,
-                sqftPerPiece: editSqFtPerPiece
-            });
-
-            populateDropdowns();
-            alert('Item edited successfully!');
         }
 
         function deleteItem() {
@@ -364,12 +373,17 @@
                     sqftPerBox: selectedItem.sqftPerBox,
                     sqftPerPiece: selectedItem.sqftPerPiece
                 });
-            }
 
-            items = items.filter(item => item.name !== selectedItemName);
-            db.ref('items').set(items);
-            populateDropdowns();
-            alert('Item deleted successfully!');
+                items = items.filter(item => item.name !== selectedItemName);
+                db.ref('items').set(items)
+                    .then(() => {
+                        populateDropdowns();
+                        alert('Item deleted successfully!');
+                    })
+                    .catch(error => {
+                        console.error("Error deleting item: ", error);
+                    });
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {

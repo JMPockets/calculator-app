@@ -317,6 +317,7 @@
                 })
                 .catch(error => {
                     console.error("Error adding item: ", error);
+                    alert("Error adding item: " + error.message);
                 });
         }
 
@@ -358,6 +359,7 @@
                     })
                     .catch(error => {
                         console.error("Error editing item: ", error);
+                        alert("Error editing item: " + error.message);
                     });
             }
         }
@@ -382,6 +384,7 @@
                     })
                     .catch(error => {
                         console.error("Error deleting item: ", error);
+                        alert("Error deleting item: " + error.message);
                     });
             }
         }

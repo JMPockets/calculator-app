@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +8,9 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js"></script>
     <style>
         body {
             background-color: #f8f9fa;
@@ -17,7 +19,7 @@
             max-width: 900px;
             margin: 20px auto;
             padding: 20px;
-            background-color: white;
+            background-color: #ffffff;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
@@ -25,27 +27,39 @@
             background-color: #343a40;
         }
         .nav-tabs .nav-link {
-            color: white;
-            border: 1px solid white;
+            color: #f8f9fa;
+            border: 1px solid #f8f9fa;
             margin-right: 5px;
         }
         .nav-tabs .nav-link.active {
-            background-color: red;
-            color: white;
-            border: 1px solid white;
+            background-color: #dc3545;
+            color: #f8f9fa;
+            border: 1px solid #f8f9fa;
         }
         .btn-custom {
-            background-color: red;
-            color: white;
+            background-color: #dc3545;
+            color: #f8f9fa;
         }
         .btn-custom:hover {
-            background-color: darkred;
+            background-color: #c82333;
         }
         .result, .real-math {
             margin-top: 20px;
         }
         .fixed-width-select {
-            width: 400px; /* Set the fixed width you desire */
+            width: 100%;
+        }
+        @media (min-width: 768px) {
+            .fixed-width-select {
+                width: 400px;
+            }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
@@ -67,7 +81,7 @@
             </li>
         </ul>
         <div class="tab-content">
-            <div class="tab-pane active" id="calculator">
+            <div class="tab-pane fade show active" id="calculator">
                 <form id="calculatorForm" onsubmit="calculate(); return false;">
                     <div class="form-group">
                         <label for="itemName">Item Name</label>
@@ -89,10 +103,10 @@
                     </div>
                     <button type="button" class="btn btn-custom btn-block" onclick="calculate()">Calculate</button>
                 </form>
-                <div class="result alert alert-info mt-3" id="result" style="display: none;"></div>
-                <div class="real-math alert alert-secondary mt-3" id="realMath" style="display: none;"></div>
+                <div class="result alert alert-info mt-3 fade-in" id="result" style="display: none;"></div>
+                <div class="real-math alert alert-secondary mt-3 fade-in" id="realMath" style="display: none;"></div>
             </div>
-            <div class="tab-pane" id="add">
+            <div class="tab-pane fade" id="add">
                 <form onsubmit="addItem(event)">
                     <div class="form-group">
                         <label for="newItemName">Item Name</label>
@@ -109,7 +123,7 @@
                     <button type="submit" class="btn btn-custom btn-block">Add Item</button>
                 </form>
             </div>
-            <div class="tab-pane" id="edit">
+            <div class="tab-pane fade" id="edit">
                 <div class="form-group">
                     <label for="editItemName">Select Item</label>
                     <select class="form-control fixed-width-select" id="editItemName" onchange="populateEditForm()">
@@ -129,7 +143,7 @@
                 </form>
                 <button class="btn btn-danger btn-block mt-2" onclick="deleteItem()">Delete Item</button>
             </div>
-            <div class="tab-pane" id="history">
+            <div class="tab-pane fade" id="history">
                 <h4 class="mt-3">Calculation History</h4>
                 <ul class="list-group" id="historyList">
                     <!-- History items will be populated by JavaScript -->
@@ -146,60 +160,34 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        let items = [
-            { name: "Aloft", sqftPerPiece: 2, sqftPerBox: 36 },
-            { name: "Arrington Gotham Grey", sqftPerPiece: 1.5, sqftPerBox: 36 },
-            { name: "Broadstreet Cognac Oak", sqftPerPiece: 2.33, sqftPerBox: 51.39 },
-            { name: "Cameron(Merbau)", sqftPerPiece: 2.33, sqftPerBox: 34.98 },
-            { name: "Coretec Pro Plus", sqftPerPiece: 2.4, sqftPerBox: 28.84 },
-            { name: "Dealer Solution", sqftPerPiece: 2.00, sqftPerBox: 54.00 },
-            { name: "Downtown (Bourbon 12 mil)", sqftPerPiece: 1.98, sqftPerBox: 41.72 },
-            { name: "Downtown (bourbon 8 mil)", sqftPerPiece: 1.98, sqftPerBox: 53.63 },
-            { name: "DruidStone", sqftPerPiece: 2.36, sqftPerBox: 23.64 },
-            { name: "Expo And Market Square", sqftPerPiece: 1.99, sqftPerBox: 53.93 },
-            { name: "Firm Fit", sqftPerPiece: 1.88, sqftPerBox: 33.84 },
-            { name: "Foundation 51.33", sqftPerPiece: 2.33, sqftPerBox: 51.33 },
-            { name: "Freelay 4.7", sqftPerPiece: 3, sqftPerBox: 36 },
-            { name: "Gluedown 2/8 Mil", sqftPerPiece: 3, sqftPerBox: 60 },
-            { name: "GRANDE (Denali)", sqftPerPiece: 2.33, sqftPerBox: 32.7 },
-            { name: "Homegrain", sqftPerPiece: 1.93, sqftPerBox: 52.3 },
-            { name: "K-Trade pvp neutral", sqftPerPiece: 2.33, sqftPerBox: 51.34 },
-            { name: "Katanga 2mm glue down", sqftPerPiece: 2.33, sqftPerBox: 51.39 },
-            { name: "Katanga 4/12", sqftPerPiece: 2.33, sqftPerBox: 28.03 },
-            { name: "Katanga 5/20", sqftPerPiece: 2.4, sqftPerBox: 28.83 },
-            { name: "Lakeshore", sqftPerPiece: 2, sqftPerBox: 36 },
-            { name: "Life Style (Caico, Playa, Aruba)", sqftPerPiece: 1.96, sqftPerBox: 23.64 },
-            { name: "Limitless", sqftPerPiece: 2.33, sqftPerBox: 34.98 },
-            { name: "Living Local", sqftPerPiece: 2, sqftPerBox: 36 },
-            { name: "Lookout Mount (Signal & Lookout point)", sqftPerPiece: 1.97, sqftPerBox: 27.58 },
-            { name: "Looselay (Stamford, Linosa, Hartford)", sqftPerPiece: 2.82, sqftPerBox: 33.9 },
-            { name: "Looselay Longboard", sqftPerPiece: 4, sqftPerBox: 32.29 },
-            { name: "Mainstreet", sqftPerPiece: 2.33, sqftPerBox: 51.39 },
-            { name: "Marathon", sqftPerPiece: 2.11, sqftPerBox: 42.36 },
-            { name: "marscarpone", sqftPerPiece: 2.41, sqftPerBox: 58 },
-            { name: "Merbau Vangogh", sqftPerPiece: 2.33, sqftPerBox: 34.98 },
-            { name: "Modernality Skyline", sqftPerPiece: 1.98, sqftPerBox: 41.72 },
-            { name: "native origins", sqftPerPiece: 1.99, sqftPerBox: 35.95 },
-            { name: "Natural Personality Heart Oak", sqftPerPiece: 1.5, sqftPerBox: 54 },
-            { name: "Neutral Oak Looselay", sqftPerPiece: 4.03, sqftPerBox: 32.29 },
-            { name: "Oyster Tile", sqftPerPiece: 1.97, sqftPerBox: 15.83 },
-            { name: "Ozark 2 (Sugar Maple, Cumberland, Key Largo)", sqftPerPiece: 2.32, sqftPerBox: 51.24 },
-            { name: "Rexford", sqftPerPiece: 2.66, sqftPerBox: 45.33 },
-            { name: "Runner Up Copano Oak", sqftPerPiece: 2.4, sqftPerBox: 28.84 },
-            { name: "Sherburn", sqftPerPiece: 1.88, sqftPerBox: 52.68 },
-            { name: "Soundtec", sqftPerPiece: 2.39, sqftPerBox: 23.9 },
-            { name: "surpass muse", sqftPerPiece: 1.99, sqftPerBox: 53.93 },
-            { name: "Suspension Chassis", sqftPerPiece: 2.33, sqftPerBox: 32.72 },
-            { name: "Tenacious Grey Ice", sqftPerPiece: 2.33, sqftPerBox: 51.39 },
-            { name: "Terrain 12 Mil (nest)", sqftPerPiece: 1.98, sqftPerBox: 41.72 },
-            { name: "Town and Country", sqftPerPiece: 1.49, sqftPerBox: 35.94 },
-            { name: "VCT (Tarkett, Imperial Textures)", sqftPerPiece: 1, sqftPerBox: 45 }
-        ];
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZBYPUvrmzPiAtm7RiQ9304s284Fx9Xnw",
+            authDomain: "cut-calculator-aeb02.firebaseapp.com",
+            projectId: "cut-calculator-aeb02",
+            storageBucket: "cut-calculator-aeb02.appspot.com",
+            messagingSenderId: "637507936787",
+            appId: "1:637507936787:web:7aa7995e6e4827e66a55e6",
+            measurementId: "G-2FGQE4TWRL"
+        };
 
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let items = [];
         let history = [];
 
+        function fetchItems() {
+            db.ref('items').once('value', snapshot => {
+                if (snapshot.exists()) {
+                    items = snapshot.val() || [];
+                    populateDropdowns();
+                }
+            });
+        }
+
         function populateDropdowns() {
-            items.sort((a, b) => a.name.localeCompare(b.name));
             const itemNameSelect = $('#itemName');
             const editItemNameSelect = $('#editItemName');
             itemNameSelect.empty();
@@ -230,7 +218,7 @@
 
             if (isNaN(requested) || isNaN(sqftPerBox) || isNaN(sqftPerPiece)) {
                 document.getElementById('result').style.display = 'block';
-                document.getElementById('result').className = 'result alert alert-danger';
+                document.getElementById('result').className = 'result alert alert-danger fade-in';
                 document.getElementById('result').innerText = 'Please enter valid numbers';
                 document.getElementById('realMath').style.display = 'none';
                 return;
@@ -255,10 +243,10 @@
             }
 
             document.getElementById('result').style.display = 'block';
-            document.getElementById('result').className = 'result alert alert-info';
+            document.getElementById('result').className = 'result alert alert-info fade-in';
             document.getElementById('result').innerText = `Boxes: ${boxes}, Pieces: ${pieces}`;
             document.getElementById('realMath').style.display = 'block';
-            document.getElementById('realMath').className = 'real-math alert alert-secondary';
+            document.getElementById('realMath').className = 'real-math alert alert-secondary fade-in';
             document.getElementById('realMath').innerText = `Actual Square Footage: ${actualSqFt.toFixed(2)}`;
 
             addToHistory({
@@ -284,7 +272,7 @@
             historyList.innerHTML = '';
             history.forEach(entry => {
                 const li = document.createElement('li');
-                li.className = 'list-group-item';
+                li.className = 'list-group-item fade-in';
                 li.innerText = entry.type === 'Calculation' ? 
                     `Calculation - Item: ${entry.itemName}, Requested: ${entry.requested}, Boxes: ${entry.boxes}, Pieces: ${entry.pieces}, Actual SqFt: ${entry.actualSqFt}` :
                     `${entry.type} - Item: ${entry.itemName}, SqFt per Box: ${entry.sqftPerBox}, SqFt per Piece: ${entry.sqftPerPiece}`;
@@ -303,11 +291,14 @@
                 return;
             }
 
-            items.push({
+            const newItem = {
                 name: newItemName,
                 sqftPerBox: newSqFtPerBox,
                 sqftPerPiece: newSqFtPerPiece
-            });
+            };
+
+            items.push(newItem);
+            db.ref('items').set(items);
 
             addToHistory({
                 type: 'Add',
@@ -348,6 +339,7 @@
             if (selectedItem) {
                 selectedItem.sqftPerBox = editSqFtPerBox;
                 selectedItem.sqftPerPiece = editSqFtPerPiece;
+                db.ref('items').set(items);
             }
 
             addToHistory({
@@ -375,12 +367,13 @@
             }
 
             items = items.filter(item => item.name !== selectedItemName);
+            db.ref('items').set(items);
             populateDropdowns();
             alert('Item deleted successfully!');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            populateDropdowns();
+            fetchItems();
         });
     </script>
 </body>

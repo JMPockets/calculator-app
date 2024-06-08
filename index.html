@@ -166,6 +166,11 @@
         let items = [];
         let history = JSON.parse(localStorage.getItem('history')) || [];
 
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchItems();
+            updateHistory();
+        });
+
         async function fetchItems() {
             const { data, error } = await supabase.from('items').select();
             if (error) {
@@ -389,11 +394,6 @@
                 alert('Item deleted successfully!');
             }
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchItems();
-            updateHistory();
-        });
     </script>
 </body>
 </html>

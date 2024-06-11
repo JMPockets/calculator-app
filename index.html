@@ -56,10 +56,10 @@
                 <a class="nav-link active" href="#calculator" data-toggle="tab">Calculator</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#add" data-toggle="tab">Add</a>
+                <a class="nav-link" href="#manualCalc" data-toggle="tab">Manual Calc</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#edit" data-toggle="tab">Edit/Delete</a>
+                <a class="nav-link" href="#reverseCalc" data-toggle="tab">Reverse Calc</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="#history" data-toggle="tab">History</a>
@@ -91,42 +91,53 @@
                 <div class="result alert alert-info mt-3" id="result" style="display: none;"></div>
                 <div class="real-math alert alert-secondary mt-3" id="realMath" style="display: none;"></div>
             </div>
-            <div class="tab-pane" id="add">
-                <form onsubmit="addItem(event)">
+            <div class="tab-pane" id="manualCalc">
+                <form id="manualCalcForm" onsubmit="manualCalculate(); return false;">
                     <div class="form-group">
-                        <label for="newItemName">Item Name</label>
-                        <input type="text" class="form-control" id="newItemName" required>
+                        <label for="manualSqftPerBox">SqFt per Box</label>
+                        <input type="number" class="form-control" id="manualSqftPerBox" placeholder="Enter SqFt per box">
                     </div>
                     <div class="form-group">
-                        <label for="newSqFtPerBox">SqFt per Box</label>
-                        <input type="number" class="form-control" id="newSqFtPerBox" step="0.01" required>
+                        <label for="manualSqftPerPiece">SqFt per Piece</label>
+                        <input type="number" class="form-control" id="manualSqftPerPiece" placeholder="Enter SqFt per piece">
                     </div>
                     <div class="form-group">
-                        <label for="newSqFtPerPiece">SqFt per Piece</label>
-                        <input type="number" class="form-control" id="newSqFtPerPiece" step="0.01" required>
+                        <label for="manualRequested">Requested</label>
+                        <input type="number" class="form-control" id="manualRequested" placeholder="Enter requested quantity" onkeypress="if(event.keyCode == 13) manualCalculate()">
                     </div>
-                    <button type="submit" class="btn btn-custom btn-block">Add Item</button>
+                    <button type="button" class="btn btn-custom btn-block" onclick="manualCalculate()">Calculate</button>
                 </form>
+                <div class="result alert alert-info mt-3" id="manualResult" style="display: none;"></div>
+                <div class="real-math alert alert-secondary mt-3" id="manualRealMath" style="display: none;"></div>
             </div>
-            <div class="tab-pane" id="edit">
-                <div class="form-group">
-                    <label for="editItemName">Select Item</label>
-                    <select class="form-control fixed-width-select" id="editItemName" onchange="populateEditForm()">
-                        <!-- Options will be populated by JavaScript -->
-                    </select>
-                </div>
-                <form onsubmit="editItem(event)">
+            <div class="tab-pane" id="reverseCalc">
+                <form id="reverseCalcForm" onsubmit="reverseCalculate(); return false;">
                     <div class="form-group">
-                        <label for="editSqFtPerBox">SqFt per Box</label>
-                        <input type="number" class="form-control" id="editSqFtPerBox" step="0.01" required>
+                        <label for="reverseItemName">Item Name</label>
+                        <select class="form-control fixed-width-select" id="reverseItemName" onchange="updateReverseSqFtValues()">
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label for="editSqFtPerPiece">SqFt per Piece</label>
-                        <input type="number" class="form-control" id="editSqFtPerPiece" step="0.01" required>
+                        <label for="reverseBoxes">Boxes</label>
+                        <input type="number" class="form-control" id="reverseBoxes" placeholder="Enter box amount" onkeypress="if(event.keyCode == 13) reverseCalculate()">
                     </div>
-                    <button type="submit" class="btn btn-custom btn-block">Edit Item</button>
+                    <div class="form-group">
+                        <label for="reversePieces">Pieces</label>
+                        <input type="number" class="form-control" id="reversePieces" placeholder="Enter piece amount" onkeypress="if(event.keyCode == 13) reverseCalculate()">
+                    </div>
+                    <div class="form-group">
+                        <label for="reverseSqftPerBox">SqFt per Box</label>
+                        <input type="number" class="form-control" id="reverseSqftPerBox" placeholder="Enter SqFt per box" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="reverseSqftPerPiece">SqFt per Piece</label>
+                        <input type="number" class="form-control" id="reverseSqftPerPiece" placeholder="Enter SqFt per piece" readonly>
+                    </div>
+                    <button type="button" class="btn btn-custom btn-block" onclick="reverseCalculate()">Calculate</button>
                 </form>
-                <button class="btn btn-danger btn-block mt-2" onclick="deleteItem()">Delete Item</button>
+                <div class="result alert alert-info mt-3" id="reverseResult" style="display: none;"></div>
+                <div class="real-math alert alert-secondary mt-3" id="reverseRealMath" style="display: none;"></div>
             </div>
             <div class="tab-pane" id="history">
                 <h4 class="mt-3">Calculation History</h4>
@@ -200,16 +211,16 @@
         function populateDropdowns() {
             items.sort((a, b) => a.name.localeCompare(b.name));
             const itemNameSelect = $('#itemName');
-            const editItemNameSelect = $('#editItemName');
+            const reverseItemNameSelect = $('#reverseItemName');
             itemNameSelect.empty();
-            editItemNameSelect.empty();
+            reverseItemNameSelect.empty();
             items.forEach(item => {
                 const option = `<option value="${item.name}">${item.name}</option>`;
                 itemNameSelect.append(option);
-                editItemNameSelect.append(option);
+                reverseItemNameSelect.append(option);
             });
             itemNameSelect.select2();
-            editItemNameSelect.select2();
+            reverseItemNameSelect.select2();
         }
 
         function updateSqFtValues() {
@@ -219,6 +230,16 @@
             if (selectedItem) {
                 document.getElementById('sqftPerBox').value = selectedItem.sqftPerBox;
                 document.getElementById('sqftPerPiece').value = selectedItem.sqftPerPiece;
+            }
+        }
+
+        function updateReverseSqFtValues() {
+            const selectedItemName = document.getElementById('reverseItemName').value;
+            const selectedItem = items.find(item => item.name === selectedItemName);
+
+            if (selectedItem) {
+                document.getElementById('reverseSqftPerBox').value = selectedItem.sqftPerBox;
+                document.getElementById('reverseSqftPerPiece').value = selectedItem.sqftPerPiece;
             }
         }
 
@@ -270,6 +291,84 @@
             });
         }
 
+        function manualCalculate() {
+            const requested = parseFloat(document.getElementById('manualRequested').value);
+            const sqftPerBox = parseFloat(document.getElementById('manualSqftPerBox').value);
+            const sqftPerPiece = parseFloat(document.getElementById('manualSqftPerPiece').value);
+
+            if (isNaN(requested) || isNaN(sqftPerBox) || isNaN(sqftPerPiece)) {
+                document.getElementById('manualResult').style.display = 'block';
+                document.getElementById('manualResult').className = 'result alert alert-danger';
+                document.getElementById('manualResult').innerText = 'Please enter valid numbers';
+                document.getElementById('manualRealMath').style.display = 'none';
+                return;
+            }
+
+            const maxBoxes = Math.floor(requested / sqftPerBox);
+            let boxes = 0;
+            let pieces = 0;
+            let actualSqFt = 0;
+
+            for (let b = maxBoxes; b >= 0; b--) {
+                const remainingSqFt = requested - (b * sqftPerBox);
+                const p = Math.floor(remainingSqFt / sqftPerPiece);
+                const totalSqFt = (b * sqftPerBox) + (p * sqftPerPiece);
+
+                if (totalSqFt <= requested) {
+                    boxes = b;
+                    pieces = p;
+                    actualSqFt = totalSqFt;
+                    break;
+                }
+            }
+
+            document.getElementById('manualResult').style.display = 'block';
+            document.getElementById('manualResult').className = 'result alert alert-info';
+            document.getElementById('manualResult').innerText = `Boxes: ${boxes}, Pieces: ${pieces}`;
+            document.getElementById('manualRealMath').style.display = 'block';
+            document.getElementById('manualRealMath').className = 'real-math alert alert-secondary';
+            document.getElementById('manualRealMath').innerText = `Actual Square Footage: ${actualSqFt.toFixed(2)}`;
+
+            addToHistory({
+                type: 'Manual Calculation',
+                requested: requested,
+                boxes: boxes,
+                pieces: pieces,
+                actualSqFt: actualSqFt.toFixed(2)
+            });
+        }
+
+        function reverseCalculate() {
+            const boxes = parseFloat(document.getElementById('reverseBoxes').value);
+            const pieces = parseFloat(document.getElementById('reversePieces').value);
+            const sqftPerBox = parseFloat(document.getElementById('reverseSqftPerBox').value);
+            const sqftPerPiece = parseFloat(document.getElementById('reverseSqftPerPiece').value);
+
+            if (isNaN(boxes) || isNaN(pieces) || isNaN(sqftPerBox) || isNaN(sqftPerPiece)) {
+                document.getElementById('reverseResult').style.display = 'block';
+                document.getElementById('reverseResult').className = 'result alert alert-danger';
+                document.getElementById('reverseResult').innerText = 'Please enter valid numbers';
+                document.getElementById('reverseRealMath').style.display = 'none';
+                return;
+            }
+
+            const requested = (boxes * sqftPerBox) + (pieces * sqftPerPiece);
+
+            document.getElementById('reverseResult').style.display = 'block';
+            document.getElementById('reverseResult').className = 'result alert alert-info';
+            document.getElementById('reverseResult').innerText = `Requested: ${requested}`;
+            document.getElementById('reverseRealMath').style.display = 'block';
+            document.getElementById('reverseRealMath').className = 'real-math alert alert-secondary';
+            document.getElementById('reverseRealMath').innerText = `Total Square Footage: ${requested.toFixed(2)}`;
+
+            addToHistory({
+                type: 'Reverse Calculation',
+                boxes: boxes,
+                pieces: pieces,
+                requested: requested.toFixed(2)
+            });
+        }
+
         function addToHistory(entry) {
             history.unshift(entry);
             if (history.length > 10) {
@@ -286,96 +385,11 @@
                 li.className = 'list-group-item';
                 li.innerText = entry.type === 'Calculation' ? 
                     `Calculation - Item: ${entry.itemName}, Requested: ${entry.requested}, Boxes: ${entry.boxes}, Pieces: ${entry.pieces}, Actual SqFt: ${entry.actualSqFt}` :
-                    `${entry.type} - Item: ${entry.itemName}, SqFt per Box: ${entry.sqftPerBox}, SqFt per Piece: ${entry.sqftPerPiece}`;
+                    entry.type === 'Manual Calculation' ?
+                    `Manual Calculation - Requested: ${entry.requested}, Boxes: ${entry.boxes}, Pieces: ${entry.pieces}, Actual SqFt: ${entry.actualSqFt}` :
+                    `Reverse Calculation - Boxes: ${entry.boxes}, Pieces: ${entry.pieces}, Requested: ${entry.requested}`;
                 historyList.appendChild(li);
             });
-        }
-
-        function addItem(event) {
-            event.preventDefault();
-            const newItemName = document.getElementById('newItemName').value;
-            const newSqFtPerBox = parseFloat(document.getElementById('newSqFtPerBox').value);
-            const newSqFtPerPiece = parseFloat(document.getElementById('newSqFtPerPiece').value);
-
-            if (!newItemName || isNaN(newSqFtPerBox) || isNaN(newSqFtPerPiece)) {
-                alert('Please enter valid details.');
-                return;
-            }
-
-            items.push({
-                name: newItemName,
-                sqftPerBox: newSqFtPerBox,
-                sqftPerPiece: newSqFtPerPiece
-            });
-
-            addToHistory({
-                type: 'Add',
-                itemName: newItemName,
-                sqftPerBox: newSqFtPerBox,
-                sqftPerPiece: newSqFtPerPiece
-            });
-
-            populateDropdowns();
-            alert('Item added successfully!');
-            document.getElementById('newItemName').value = '';
-            document.getElementById('newSqFtPerBox').value = '';
-            document.getElementById('newSqFtPerPiece').value = '';
-        }
-
-        function populateEditForm() {
-            const selectedItemName = document.getElementById('editItemName').value;
-            const selectedItem = items.find(item => item.name === selectedItemName);
-
-            if (selectedItem) {
-                document.getElementById('editSqFtPerBox').value = selectedItem.sqftPerBox;
-                document.getElementById('editSqFtPerPiece').value = selectedItem.sqftPerPiece;
-            }
-        }
-
-        function editItem(event) {
-            event.preventDefault();
-            const selectedItemName = document.getElementById('editItemName').value;
-            const editSqFtPerBox = parseFloat(document.getElementById('editSqFtPerBox').value);
-            const editSqFtPerPiece = parseFloat(document.getElementById('editSqFtPerPiece').value);
-
-            if (!selectedItemName || isNaN(editSqFtPerBox) || isNaN(editSqFtPerPiece)) {
-                alert('Please enter valid details.');
-                return;
-            }
-
-            const selectedItem = items.find(item => item.name === selectedItemName);
-            if (selectedItem) {
-                selectedItem.sqftPerBox = editSqFtPerBox;
-                selectedItem.sqftPerPiece = editSqFtPerPiece;
-            }
-
-            addToHistory({
-                type: 'Edit',
-                itemName: selectedItemName,
-                sqftPerBox: editSqFtPerBox,
-                sqftPerPiece: editSqFtPerPiece
-            });
-
-            populateDropdowns();
-            alert('Item edited successfully!');
-        }
-
-        function deleteItem() {
-            const selectedItemName = document.getElementById('editItemName').value;
-            const selectedItem = items.find(item => item.name === selectedItemName);
-
-            if (selectedItem) {
-                addToHistory({
-                    type: 'Delete',
-                    itemName: selectedItemName,
-                    sqftPerBox: selectedItem.sqftPerBox,
-                    sqftPerPiece: selectedItem.sqftPerPiece
-                });
-            }
-
-            items = items.filter(item => item.name !== selectedItemName);
-            populateDropdowns();
-            alert('Item deleted successfully!');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
